@@ -19,7 +19,7 @@ Prerequisites
 
 * Open your terminal.
 * Change the current working directory to the location where you want the cloned directory.
-* Type `git clone https://github.com/your_username/ChristmasLights.git` and press Enter to clone the repository to your local machine.
+* Type `git clone https://github.com/PPrinsloo/ChristmasLights.git` and press Enter to clone the repository to your local machine.
 * Navigate to the project directory
 * Build the project by running `go build` from inside the directory.
 
