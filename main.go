@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"runtime"
 	"strconv"
 	"strings"
 	"sync"
@@ -73,6 +74,8 @@ func main() {
 	fmt.Printf("Total lights turned on %d\n\n", count)
 	elapsed := time.Since(start)
 	fmt.Printf("Processing took %s\n", elapsed)
+
+	printLightsGrid(lights)
 }
 
 func countAll(lights [][]bool) int {
@@ -143,19 +146,24 @@ func doInstruction(inst instruction, lights *[][]bool) {
 
 func turnOn(rectangle rect, lights *[][]bool) {
 	start := time.Now()
-	var wg sync.WaitGroup
 
-	for i := 0; i < size; i++ {
-		wg.Add(1)
-		go func(i int) {
+	numCPU := runtime.NumCPU()
+	chunkSize := (rectangle.rowEnd - rectangle.rowStart + 1 + numCPU - 1) / numCPU
+
+	var wg sync.WaitGroup
+	wg.Add(numCPU)
+
+	for p := 0; p < numCPU; p++ {
+		go func(p int) {
 			defer wg.Done()
-			for j := 0; j < size; j++ {
-				// clear row total
-				if i >= rectangle.rowStart && i <= rectangle.rowEnd && j >= rectangle.columnStart && j <= rectangle.columnEnd {
+			rowStart := rectangle.rowStart + p*chunkSize
+			rowEnd := min(rectangle.rowStart+(p+1)*chunkSize, rectangle.rowEnd+1)
+			for i := rowStart; i < rowEnd; i++ {
+				for j := rectangle.columnStart; j <= rectangle.columnEnd; j++ {
 					(*lights)[i][j] = true
 				}
 			}
-		}(i)
+		}(p)
 	}
 
 	wg.Wait()
@@ -164,41 +172,57 @@ func turnOn(rectangle rect, lights *[][]bool) {
 }
 
 func turnOff(rectangle rect, lights *[][]bool) {
-	var wg sync.WaitGroup
+	start := time.Now()
 
-	for i := 0; i < size; i++ {
-		wg.Add(1)
-		go func(i int) {
+	numCPU := runtime.NumCPU()
+	chunkSize := (rectangle.rowEnd - rectangle.rowStart + 1 + numCPU - 1) / numCPU
+
+	var wg sync.WaitGroup
+	wg.Add(numCPU)
+
+	for p := 0; p < numCPU; p++ {
+		go func(p int) {
 			defer wg.Done()
-			for j := 0; j < size; j++ {
-				// clear row total
-				if i >= rectangle.rowStart && i <= rectangle.rowEnd && j >= rectangle.columnStart && j <= rectangle.columnEnd {
+			rowStart := rectangle.rowStart + p*chunkSize
+			rowEnd := min(rectangle.rowStart+(p+1)*chunkSize, rectangle.rowEnd+1)
+			for i := rowStart; i < rowEnd; i++ {
+				for j := rectangle.columnStart; j <= rectangle.columnEnd; j++ {
 					(*lights)[i][j] = false
 				}
 			}
-		}(i)
+		}(p)
 	}
 
 	wg.Wait()
+	elapsed := time.Since(start)
+	fmt.Printf("Turn off took %s\n", elapsed)
 }
 
 func toggle(rectangle rect, lights *[][]bool) {
-	var wg sync.WaitGroup
+	start := time.Now()
 
-	for i := 0; i < size; i++ {
-		wg.Add(1)
-		go func(i int) {
+	numCPU := runtime.NumCPU()
+	chunkSize := (rectangle.rowEnd - rectangle.rowStart + 1 + numCPU - 1) / numCPU
+
+	var wg sync.WaitGroup
+	wg.Add(numCPU)
+
+	for p := 0; p < numCPU; p++ {
+		go func(p int) {
 			defer wg.Done()
-			for j := 0; j < size; j++ {
-				// clear row total
-				if i >= rectangle.rowStart && i <= rectangle.rowEnd && j >= rectangle.columnStart && j <= rectangle.columnEnd {
+			rowStart := rectangle.rowStart + p*chunkSize
+			rowEnd := min(rectangle.rowStart+(p+1)*chunkSize, rectangle.rowEnd+1)
+			for i := rowStart; i < rowEnd; i++ {
+				for j := rectangle.columnStart; j <= rectangle.columnEnd; j++ {
 					(*lights)[i][j] = !(*lights)[i][j]
 				}
 			}
-		}(i)
+		}(p)
 	}
 
 	wg.Wait()
+	elapsed := time.Since(start)
+	fmt.Printf("Toggle took %s\n", elapsed)
 }
 
 func countRowLightsOn(lights []bool) int {
@@ -250,4 +274,24 @@ func getRect(line string) rect {
 	rectangle := rect{rowStart, columnStart, rowEnd, columnEnd}
 
 	return rectangle
+}
+
+func printLightsGrid(lights [][]bool) {
+	for _, row := range lights {
+		for _, light := range row {
+			if light {
+				fmt.Print("#")
+			} else {
+				fmt.Print(".")
+			}
+		}
+		fmt.Println()
+	}
+}
+
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
 }
