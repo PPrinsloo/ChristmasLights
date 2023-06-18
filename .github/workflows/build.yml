@@ -5,54 +5,92 @@ on:
       - '*'
 
 jobs:
-  release:
+  build:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        goos: [linux, darwin, windows]
-        goarch: [amd64]
         include:
-        - goos: windows
-          ext: .exe
-        - goos: linux
-          ext: ''
-        - goos: darwin
-          ext: ''
+          - goos: linux
+            goarch: amd64
+            ext: ''
+          - goos: darwin
+            goarch: amd64
+            ext: ''
+          - goos: darwin
+            goarch: arm64
+            ext: ''
+          - goos: windows
+            goarch: amd64
+            ext: '.exe'
     steps:
-    - name: Check out code
-      uses: actions/checkout@v2
+      - name: Check out code
+        uses: actions/checkout@v2
 
-    - name: Set up Go
-      uses: actions/setup-go@v2
-      with:
-        go-version: 1.19
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.16
 
-    - name: Get dependencies
-      run: go get -v -t -d ./...
+      - name: Get dependencies
+        run: go get -v -t -d ./...
 
-    - name: Build
-      run: CGO_ENABLED=0 GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build -a -installsuffix cgo -o yourproject${{ matrix.ext }}
-      env:
-        GO111MODULE: "on"
+      - name: Build
+        run: CGO_ENABLED=0 GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build -a -installsuffix cgo -o yourproject-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }}
+        env:
+          GO111MODULE: "on"
 
-    - name: Create Release
-      id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
-      with:
-        tag_name: ${{ github.ref }}
-        release_name: Release ${{ github.ref }}
-        draft: false
-        prerelease: false
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: yourproject-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }}
+          path: ./yourproject-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }}
+          
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
 
-    - name: Upload Release Asset
-      id: upload_release_asset 
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }} 
-        asset_path: ./yourproject${{ matrix.ext }}
-        asset_name: yourproject-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }}
-        asset_content_type: application/octet-stream
+      - name: Download artifacts
+        uses: actions/download-artifact@v2
+
+      - name: Upload Release Asset
+        id: upload_release_asset 
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} 
+          asset_path: ./yourproject-linux-amd64
+          asset_name: yourproject-linux-amd64
+          asset_content_type: application/octet-stream
+
+      - name: Upload Release Asset
+        id: upload_release_asset 
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} 
+          asset_path: ./yourproject-darwin-amd64
+          asset_name: yourproject-darwin-amd64
+          asset_content_type: application/octet-stream
+
+      - name: Upload Release Asset
+        id: upload_release_asset 
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} 
+          asset_path: ./yourproject-darwin-arm64
+          asset_name: yourproject-darwin-arm64
