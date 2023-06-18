@@ -29,21 +29,21 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v2
         with:
-          go-version: 1.19
+          go-version: 1.16
 
       - name: Get dependencies
         run: go get -v -t -d ./...
 
       - name: Build
-        run: CGO_ENABLED=0 GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build -a -installsuffix cgo -o yourproject-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }}
+        run: CGO_ENABLED=0 GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build -a -installsuffix cgo -o christmasLights-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }}
         env:
           GO111MODULE: "on"
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v2
         with:
-          name: yourproject-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }}
-          path: ./yourproject-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }}
+          name: christmasLights-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }}
+          path: ./christmasLights-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }}
           
   release:
     needs: build
@@ -63,34 +63,46 @@ jobs:
       - name: Download artifacts
         uses: actions/download-artifact@v2
 
-      - name: Upload Release Asset
-        id: upload_release_asset 
+      - name: Upload Linux Release Asset
+        id: upload_linux_release_asset 
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }} 
-          asset_path: ./yourproject-linux-amd64
-          asset_name: yourproject-linux-amd64
+          asset_path: ./christmasLights-linux-amd64
+          asset_name: christmasLights-linux-amd64
           asset_content_type: application/octet-stream
 
-      - name: Upload Release Asset
-        id: upload_release_asset 
+      - name: Upload Darwin AMD64 Release Asset
+        id: upload_darwin_amd64_release_asset 
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }} 
-          asset_path: ./yourproject-darwin-amd64
-          asset_name: yourproject-darwin-amd64
+          asset_path: ./christmasLights-darwin-amd64
+          asset_name: christmasLights-darwin-amd64
           asset_content_type: application/octet-stream
 
-      - name: Upload Release Asset
-        id: upload_release_asset 
+      - name: Upload Darwin ARM64 Release Asset
+        id: upload_darwin_arm64_release_asset
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }} 
-          asset_path: ./yourproject-darwin-arm64
-          asset_name: yourproject-darwin-arm64
+          asset_path: ./christmasLights-darwin-arm64
+          asset_name: christmasLights-darwin-arm64
+          asset_content_type: application/octet-stream
+
+      - name: Upload Windows Release Asset
+        id: upload_windows_release_asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} 
+          asset_path: ./christmasLights-windows-amd64.exe
+          asset_name: christmasLights-windows-amd64.exe
+          asset_content_type: application/octet-stream
