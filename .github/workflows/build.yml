@@ -70,7 +70,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }} 
-          asset_path: ./christmasLights-linux-amd64
+          asset_path: ./christmasLights-linux-amd64/christmasLights-linux-amd64
           asset_name: christmasLights-linux-amd64
           asset_content_type: application/octet-stream
 
@@ -81,7 +81,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }} 
-          asset_path: ./christmasLights-darwin-amd64
+          asset_path: ./christmasLights-darwin-amd64/christmasLights-darwin-amd64
           asset_name: christmasLights-darwin-amd64
           asset_content_type: application/octet-stream
 
@@ -92,7 +92,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }} 
-          asset_path: ./christmasLights-darwin-arm64
+          asset_path: ./christmasLights-darwin-arm64/christmasLights-darwin-arm64
           asset_name: christmasLights-darwin-arm64
           asset_content_type: application/octet-stream
 
@@ -103,6 +103,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }} 
-          asset_path: ./christmasLights-windows-amd64.exe
+          asset_path: ./christmasLights-windows-amd64.exe/christmasLights-windows-amd64.exe
           asset_name: christmasLights-windows-amd64.exe
           asset_content_type: application/octet-stream
